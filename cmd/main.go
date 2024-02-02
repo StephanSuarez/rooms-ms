@@ -1,15 +1,15 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"github.com/tesis/internal/common/conf"
-	"github.com/tesis/internal/users/http"
+	"github.com/tesis/internal/rooms/http"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type App struct {
-	env *conf.Env
+	env    *conf.Env
+	dbConn *mongo.Database
 }
 
 func main() {
@@ -17,9 +17,7 @@ func main() {
 	app := App{}
 
 	app.env = conf.NewEnv()
-	fmt.Println("hola stephan")
-
-	fmt.Println(app.env.MongoUsername)
+	app.dbConn = conf.GetDBInstance()
 
 	r := gin.Default()
 	http.Routes(r)

@@ -5,7 +5,7 @@ import (
 )
 
 func Routes(r *gin.Engine) {
-	r.GET("/v1/rooms/find-all", GetRooms)
+	r.GET("/v1/rooms/get-rooms", GetRooms)
 
 	r.Run()
 }
