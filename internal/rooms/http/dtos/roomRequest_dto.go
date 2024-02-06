@@ -1,10 +1,12 @@
 package dtos
 
-import "github.com/tesis/internal/rooms/entity"
+import (
+	"github.com/tesis/internal/rooms/entity"
+)
 
 type RoomReqDTO struct {
 	Name        string `json:"name"`
-	Description string `json:"desc"`
+	Description string `json:"description"`
 	CreatedBy   string `json:"userId"`
 	NumMaxUsers string `json:"maxUsers"`
 	Status      string `json:"status"`
@@ -18,12 +20,12 @@ func (rrd *RoomReqDTO) MapEntityToDto(roomEntity *entity.Room) {
 	rrd.Status = roomEntity.Status
 }
 
-func MapEntityFromDto(RoomReqDTO *RoomReqDTO) *entity.Room {
+func (rrd *RoomReqDTO) MapEntityFromDto() *entity.Room {
 	return &entity.Room{
-		Name:        RoomReqDTO.Name,
-		Description: RoomReqDTO.Description,
-		CreatedBy:   RoomReqDTO.CreatedBy,
-		NumMaxUsers: RoomReqDTO.NumMaxUsers,
-		Status:      RoomReqDTO.Status,
+		Name:        rrd.Name,
+		Description: rrd.Description,
+		CreatedBy:   rrd.CreatedBy,
+		NumMaxUsers: rrd.NumMaxUsers,
+		Status:      rrd.Status,
 	}
 }

@@ -1,10 +1,14 @@
 package repository
 
 import (
-	"context"
+	// "context"
 
+	"fmt"
+
+	"github.com/tesis/internal/common/utils"
+	"github.com/tesis/internal/rooms/entity"
 	"github.com/tesis/internal/rooms/repository/models"
-	"go.mongodb.org/mongo-driver/mongo"
+	// "go.mongodb.org/mongo-driver/mongo"
 )
 
 // func (rm *Room) MapToRoom(roomDto http.RoomDTO) *Room {
@@ -31,16 +35,25 @@ import (
 // 	}
 // }
 
-func CreateRoom(dbInstance *mongo.Database, room *models.Room) error {
-	collection := dbInstance.Collection("rooms")
-	ctx := context.TODO()
+// func CreateRoom(dbInstance *mongo.Database, room *models.Room) error {
+// 	collection := dbInstance.Collection("rooms")
+// 	ctx := context.TODO()
 
-	_, err := collection.InsertOne(ctx, room)
-	if err != nil {
-		return err
-	}
+// 	_, err := collection.InsertOne(ctx, room)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func FindAll() {}
+
+func InsertOne(roomEntity *entity.Room) error {
+	roomModel := models.Room{}
+	roomModel.MapEntityToModel(roomEntity)
+	if !utils.CheckRoomStatus(roomModel.Status) {
+		return fmt.Errorf("room status is no valid")
+	}
+	return nil
+}

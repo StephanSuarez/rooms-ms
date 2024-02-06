@@ -2,21 +2,13 @@ package models
 
 import "github.com/tesis/internal/rooms/entity"
 
-type roomStatus string
-
-const (
-	active   roomStatus = "Active"
-	inactive roomStatus = "Inactive"
-	deleted  roomStatus = "Deleted"
-)
-
 type Room struct {
-	ID          string     `bson:"id"`
-	Name        string     `bson:"name"`
-	Description string     `bson:"desc"`
-	CreatedBy   string     `bson:"userId"`
-	NumMaxUsers string     `bson:"maxUsers"`
-	Status      roomStatus `bson:"status"` // active, desactive, deleted
+	ID          string `bson:"id"`
+	Name        string `bson:"name"`
+	Description string `bson:"desc"`
+	CreatedBy   string `bson:"userId"`
+	NumMaxUsers string `bson:"maxUsers"`
+	Status      string `bson:"status"` // active, desactive, deleted
 }
 
 func (model *Room) MapEntityToModel(roomEntity *entity.Room) {
@@ -24,7 +16,16 @@ func (model *Room) MapEntityToModel(roomEntity *entity.Room) {
 	model.Description = roomEntity.Description
 	model.CreatedBy = roomEntity.CreatedBy
 	model.NumMaxUsers = roomEntity.NumMaxUsers
-	model.Status = roomStatus(roomEntity.Status)
+	model.Status = roomEntity.Status
 }
 
-func MapEntityFromModel() {}
+func (model *Room) MapEntityFromModel() *entity.Room {
+	return &entity.Room{
+		ID:          model.ID,
+		Name:        model.Name,
+		Description: model.Description,
+		CreatedBy:   model.CreatedBy,
+		NumMaxUsers: model.NumMaxUsers,
+		Status:      string(model.Status),
+	}
+}
