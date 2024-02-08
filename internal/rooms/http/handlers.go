@@ -9,16 +9,29 @@ import (
 	"github.com/tesis/internal/rooms/services"
 )
 
-func GetRooms(ctx *gin.Context) {
+type roomHandler struct {
+	rs services.RoomService
+}
 
-	services.FindAll()
+type RoomHandler interface {
+	GetRooms(ctx *gin.Context)
+	CreateRoom(ctx *gin.Context)
+}
+
+func NewRoomHandler(roomService *services.RoomService) RoomHandler {
+	return &roomHandler{
+		rs: *roomService,
+	}
+}
+
+func (rh *roomHandler) GetRooms(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"rooms": "rooms",
 	})
 }
 
-func CreateRoom(ctx *gin.Context) {
+func (rh *roomHandler) CreateRoom(ctx *gin.Context) {
 	roomDto := dtos.RoomReqDTO{}
 
 	if err := ctx.ShouldBind(&roomDto); err != nil {
@@ -35,7 +48,7 @@ func CreateRoom(ctx *gin.Context) {
 		return
 	}
 
-	if err := services.CreateRoom(roomDto.MapEntityFromDto()); err != nil {
+	if err := rh.rs.CreateRoom(roomDto.MapEntityFromDto()); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})

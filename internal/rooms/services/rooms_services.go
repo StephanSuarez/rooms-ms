@@ -8,17 +8,31 @@ import (
 	"github.com/tesis/internal/rooms/repository"
 )
 
-func FindAll() {
+type roomService struct {
+	rr *repository.RoomRepository
+}
+
+type RoomService interface {
+	FindAll()
+	CreateRoom(roomEntity *entity.Room) error
+}
+
+func NewRoomService(roomRepository *repository.RoomRepository) RoomService {
+	return &roomService{
+		rr: roomRepository,
+	}
+}
+
+func (rs *roomService) FindAll() {
 	fmt.Println("hello")
 }
 
-func CreateRoom(roomEntity *entity.Room) error {
+func (rs *roomService) CreateRoom(roomEntity *entity.Room) error {
 	fmt.Println("service")
 	fmt.Println(roomEntity)
 	if !utils.CheckRoomStatus(roomEntity.Status) {
 		return fmt.Errorf("room rtatus is not valid")
 	}
-	repository.InsertOne(roomEntity)
+
 	return nil
 }
-
