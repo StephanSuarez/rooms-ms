@@ -6,16 +6,21 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type Dependencies struct {
-	dbInstance *mongo.Database
-	rr         repository.RoomRepository
-	rs         services.RoomService
-	rh         RoomHandler
+type RoomDependencies struct {
+	rr repository.RoomRepository
+	rs services.RoomService
+	rh RoomHandler
 }
 
-func (ap *Dependencies) NewAppDependencies(dbInstance *mongo.Database) {
-	ap.dbInstance = dbInstance
-	ap.rr = repository.NewRoomRepository(dbInstance)
-	ap.rs = services.NewRoomService(&ap.rr)
-	ap.rh = NewRoomHandler(&ap.rs)
+func NewAppDependencies(dbInstanceConn *mongo.Database) *RoomDependencies {
+	dbInstance := dbInstanceConn
+	roomRepository := repository.NewRoomRepository(dbInstance)
+	roomService := services.NewRoomService(&roomRepository)
+	roomHandler := NewRoomHandler(&roomService)
+
+	return &RoomDependencies{
+		rr: roomRepository,
+		rs: roomService,
+		rh: roomHandler,
+	}
 }

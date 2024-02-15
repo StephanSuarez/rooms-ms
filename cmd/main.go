@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/tesis/internal/common/conf"
 	"github.com/tesis/internal/rooms/http"
 
@@ -12,6 +14,7 @@ type App struct {
 	env    *conf.Env
 	route  *gin.Engine
 	dbConn *mongo.Database
+	rd     *http.RoomDependencies
 }
 
 func main() {
@@ -28,8 +31,12 @@ func main() {
 		Dbname:   app.env.DbName,
 	}
 
+	fmt.Print(dbenv.Dbname)
+
 	app.dbConn = conf.GetDBInstance(dbenv)
 
+	app.rd = http.NewAppDependencies(app.dbConn)
+
 	app.route = gin.Default()
-	http.Routes(app.route)
+	http.Routes(app.route, app.rd)
 }

@@ -14,21 +14,14 @@ type roomHandler struct {
 }
 
 type RoomHandler interface {
-	GetRooms(ctx *gin.Context)
 	CreateRoom(ctx *gin.Context)
+	GetRooms(ctx *gin.Context)
 }
 
 func NewRoomHandler(roomService *services.RoomService) RoomHandler {
 	return &roomHandler{
 		rs: *roomService,
 	}
-}
-
-func (rh *roomHandler) GetRooms(ctx *gin.Context) {
-
-	ctx.JSON(http.StatusOK, gin.H{
-		"rooms": "rooms",
-	})
 }
 
 func (rh *roomHandler) CreateRoom(ctx *gin.Context) {
@@ -58,4 +51,21 @@ func (rh *roomHandler) CreateRoom(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"body": roomDto,
 	})
+}
+
+func (rh *roomHandler) GetRooms(ctx *gin.Context) {
+	rooms, err := rh.rs.GetRooms()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err,
+		})
+		return
+	}
+
+	var roomsResDto []dtos.RoomResDTO
+	for i := 0; i < len(rooms); i++ {
+		roomsResDto = append(roomsResDto, dtos.RoomResDTO(rooms[i]))
+	}
+
+	ctx.JSON(http.StatusOK, roomsResDto)
 }
