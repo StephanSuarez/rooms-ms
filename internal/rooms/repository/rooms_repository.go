@@ -3,11 +3,13 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/tesis/internal/common/utils"
 	"github.com/tesis/internal/rooms/entity"
 	"github.com/tesis/internal/rooms/repository/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -20,6 +22,9 @@ var collection *mongo.Collection
 type RoomRepository interface {
 	InsertOne(roomEntity *entity.Room) error
 	FindAll() ([]entity.Room, error)
+	FindOne(id string) (*entity.Room, error)
+	UpdateOne(id string, roomEntity *entity.Room) (*entity.Room, error)
+	DeleteOne(id string) (bool, error)
 }
 
 func NewRoomRepository(dbMongoInstance *mongo.Database) RoomRepository {
@@ -69,4 +74,30 @@ func (rr *roomRepository) FindAll() ([]entity.Room, error) {
 	}
 
 	return roomsEntity, nil
+}
+
+func (rr *roomRepository) FindOne(id string) (*entity.Room, error) {
+	var room models.Room
+
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		log.Fatal("Invalid ID:", err)
+	}
+
+	err = collection.FindOne(context.TODO(), bson.M{"_id": objectID}).Decode(&room)
+	if err != nil {
+		return nil, err
+	}
+
+	return room.MapEntityFromModel(), nil
+}
+
+func (rr *roomRepository) UpdateOne(id string, roomEntity *entity.Room) (*entity.Room, error) {
+
+	return nil, nil
+}
+
+func (rr *roomRepository) DeleteOne(id string) (bool, error) {
+
+	return false, nil
 }

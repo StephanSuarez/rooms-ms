@@ -15,6 +15,9 @@ type roomService struct {
 type RoomService interface {
 	CreateRoom(roomEntity *entity.Room) error
 	GetRooms() ([]entity.Room, error)
+	GetRoomByID(id string) (*entity.Room, error)
+	UpdateRoom(id string, roomEntity *entity.Room) (*entity.Room, error)
+	DeleteRoom(id string) (bool, error)
 }
 
 func NewRoomService(roomRepository *repository.RoomRepository) RoomService {
@@ -43,4 +46,22 @@ func (rs *roomService) GetRooms() ([]entity.Room, error) {
 	}
 
 	return rooms, nil
+}
+
+func (rs *roomService) GetRoomByID(id string) (*entity.Room, error) {
+	room, err := rs.rr.FindOne(id)
+	if err != nil {
+		return nil, err
+	}
+	return room, nil
+}
+
+func (rs *roomService) UpdateRoom(id string, roomEntity *entity.Room) (*entity.Room, error) {
+
+	return nil, nil
+}
+
+func (rs *roomService) DeleteRoom(id string) (bool, error) {
+
+	return false, nil
 }

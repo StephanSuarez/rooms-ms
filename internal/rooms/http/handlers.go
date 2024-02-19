@@ -16,6 +16,9 @@ type roomHandler struct {
 type RoomHandler interface {
 	CreateRoom(ctx *gin.Context)
 	GetRooms(ctx *gin.Context)
+	GetRoomByID(ctx *gin.Context)
+	UpdateRoom(ctx *gin.Context)
+	DeleteRoom(ctx *gin.Context)
 }
 
 func NewRoomHandler(roomService *services.RoomService) RoomHandler {
@@ -68,4 +71,28 @@ func (rh *roomHandler) GetRooms(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, roomsResDto)
+}
+
+func (rh *roomHandler) GetRoomByID(ctx *gin.Context) {
+	id := ctx.Param("id")
+	room, err := rh.rs.GetRoomByID(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err,
+		})
+		return
+	}
+
+	roomResDto := dtos.RoomResDTO{}
+	roomResDto.MapEntityToDto(room)
+
+	ctx.JSON(http.StatusOK, roomResDto)
+}
+
+func (rh *roomHandler) UpdateRoom(ctx *gin.Context) {
+
+}
+
+func (rh *roomHandler) DeleteRoom(ctx *gin.Context) {
+
 }
