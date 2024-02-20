@@ -78,7 +78,7 @@ func (rh *roomHandler) GetRoomByID(ctx *gin.Context) {
 	room, err := rh.rs.GetRoomByID(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
@@ -90,7 +90,27 @@ func (rh *roomHandler) GetRoomByID(ctx *gin.Context) {
 }
 
 func (rh *roomHandler) UpdateRoom(ctx *gin.Context) {
+	id := ctx.Param("id")
 
+	roomDto := dtos.RoomReqDTO{}
+	if err := ctx.ShouldBind(&roomDto); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	if !utils.CheckRoomStatus(roomDto.Status) {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Room Status is not valid",
+		})
+		return
+	}
+
+	roomEntity, err := rh.rs.UpdateRoom(id, roomDto.MapEntityFromDto())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, roomEntity)
 }
 
 func (rh *roomHandler) DeleteRoom(ctx *gin.Context) {

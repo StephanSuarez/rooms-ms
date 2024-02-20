@@ -57,8 +57,11 @@ func (rs *roomService) GetRoomByID(id string) (*entity.Room, error) {
 }
 
 func (rs *roomService) UpdateRoom(id string, roomEntity *entity.Room) (*entity.Room, error) {
-
-	return nil, nil
+	roomEntity, err := rs.rr.UpdateOne(id, roomEntity)
+	if err != nil {
+		return nil, err
+	}
+	return roomEntity, nil
 }
 
 func (rs *roomService) DeleteRoom(id string) (bool, error) {

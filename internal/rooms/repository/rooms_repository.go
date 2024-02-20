@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/tesis/internal/common/utils"
 	"github.com/tesis/internal/rooms/entity"
@@ -81,7 +80,7 @@ func (rr *roomRepository) FindOne(id string) (*entity.Room, error) {
 
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		log.Fatal("Invalid ID:", err)
+		return nil, err
 	}
 
 	err = collection.FindOne(context.TODO(), bson.M{"_id": objectID}).Decode(&room)
@@ -93,8 +92,30 @@ func (rr *roomRepository) FindOne(id string) (*entity.Room, error) {
 }
 
 func (rr *roomRepository) UpdateOne(id string, roomEntity *entity.Room) (*entity.Room, error) {
+	room := models.Room{}
+	room.MapEntityToModel(roomEntity)
 
-	return nil, nil
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	update := bson.M{
+		"$set": room,
+	}
+
+	result, err := collection.UpdateOne(context.TODO(), bson.M{"_id": objectID}, update)
+	if err != nil {
+		return nil, err
+	}
+	if result.ModifiedCount == 0 {
+		return nil, fmt.Errorf("the document to update was not found")
+	}
+
+	roomEntity.ID = id
+
+	return roomEntity, nil
 }
 
 func (rr *roomRepository) DeleteOne(id string) (bool, error) {
