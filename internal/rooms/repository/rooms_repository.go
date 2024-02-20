@@ -120,5 +120,18 @@ func (rr *roomRepository) UpdateOne(id string, roomEntity *entity.Room) (*entity
 
 func (rr *roomRepository) DeleteOne(id string) (bool, error) {
 
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+
+	result, err := collection.DeleteOne(context.TODO(), bson.M{"_id": objectId})
+	if err != nil {
+		fmt.Print(err)
+		return false, nil
+	}
+
+	fmt.Println(result)
+
 	return false, nil
 }

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -114,5 +115,18 @@ func (rh *roomHandler) UpdateRoom(ctx *gin.Context) {
 }
 
 func (rh *roomHandler) DeleteRoom(ctx *gin.Context) {
+	id := ctx.Param("id")
+	err := rh.rs.DeleteRoom(id)
 
+	if err.Error() == "room ID was not found" {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("room with id: %s deleted", id)})
 }
