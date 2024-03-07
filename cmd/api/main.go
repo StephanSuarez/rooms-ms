@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/tesis/internal/common/conf"
 	"github.com/tesis/internal/rooms/http"
 
@@ -24,14 +22,13 @@ func main() {
 	app.env = conf.NewEnv()
 
 	dbenv := &conf.DbEnv{
+		DbEnviroment: app.env.DbEnviroment,
 		Server:   app.env.MongoServer,
 		Username: app.env.MongoUsername,
 		Password: app.env.MongoPassword,
 		Cluster:  app.env.MongoCluster,
 		Dbname:   app.env.DbName,
 	}
-
-	fmt.Print(dbenv.Dbname)
 
 	app.dbConn = conf.GetDBInstance(dbenv)
 

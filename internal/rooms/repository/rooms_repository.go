@@ -24,6 +24,9 @@ type RoomRepository interface {
 	FindOne(id string) (*entity.Room, error)
 	UpdateOne(id string, roomEntity *entity.Room) (*entity.Room, error)
 	DeleteOne(id string) (bool, error)
+
+	AddUserToRoom(idRoom, idUser string) error
+	RemoveUserInRoom(idRoom, idUser string) error
 }
 
 func NewRoomRepository(dbMongoInstance *mongo.Database) RoomRepository {
@@ -36,7 +39,6 @@ func NewRoomRepository(dbMongoInstance *mongo.Database) RoomRepository {
 func (rr *roomRepository) InsertOne(roomEntity *entity.Room) error {
 	roomModel := models.Room{}
 	roomModel.MapEntityToModel(roomEntity)
-	fmt.Print("inserting ")
 
 	if !utils.CheckRoomStatus(roomModel.Status) {
 		return fmt.Errorf("room status is no valid")
@@ -44,7 +46,6 @@ func (rr *roomRepository) InsertOne(roomEntity *entity.Room) error {
 
 	ctx := context.TODO()
 	_, err := collection.InsertOne(ctx, roomModel)
-	fmt.Print("inserting ")
 	if err != nil {
 		panic(err)
 	}
@@ -134,4 +135,16 @@ func (rr *roomRepository) DeleteOne(id string) (bool, error) {
 	fmt.Println(result)
 
 	return false, nil
+}
+
+// Users in room domain
+
+func (rr *roomRepository) AddUserToRoom(roomID, userID string) error {
+
+	return nil
+}
+
+func (rr *roomRepository) RemoveUserInRoom(idRoom, idUser string) error {
+
+	return nil
 }

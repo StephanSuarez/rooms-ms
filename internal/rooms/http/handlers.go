@@ -130,3 +130,27 @@ func (rh *roomHandler) DeleteRoom(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("room with id: %s deleted", id)})
 }
+
+// Users in room domain
+
+func (rr *roomHandler) AddUserToRoom(ctx *gin.Context) {
+	roomID := ctx.Param("id")
+
+	var userIdReq struct {
+		UserId string `json: "userID"`
+	}
+
+	if err := ctx.ShouldBind(&userIdReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	err := rr.rs.AddUserToRoom(roomID, userIdReq.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
+
+}
+
+func (rr *roomHandler) RemoveUserInRoom(ctx *gin.Context) {
+
+}

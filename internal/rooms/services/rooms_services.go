@@ -18,6 +18,9 @@ type RoomService interface {
 	GetRoomByID(id string) (*entity.Room, error)
 	UpdateRoom(id string, roomEntity *entity.Room) (*entity.Room, error)
 	DeleteRoom(id string) error
+	
+	AddUserToRoom(idRoom, idUser string) error
+	RemoveUserInRoom(idRoom, idUser string) error
 }
 
 func NewRoomService(roomRepository *repository.RoomRepository) RoomService {
@@ -72,6 +75,18 @@ func (rs *roomService) DeleteRoom(id string) error {
 	if !roomDeleted {
 		return fmt.Errorf("room ID was not found")
 	}
+
+	return nil
+}
+
+// Users in room domain
+
+func (rr *roomService) AddUserToRoom(idRoom, idUser string) error {
+
+	return nil
+}
+
+func (rr *roomService) RemoveUserInRoom(idRoom, idUser string) error {
 
 	return nil
 }
