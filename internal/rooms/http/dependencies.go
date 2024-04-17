@@ -12,7 +12,7 @@ type RoomDependencies struct {
 	rh RoomHandler
 }
 
-func NewAppDependencies(dbInstanceConn *mongo.Database) *RoomDependencies {
+func NewRoomDependencies(dbInstanceConn *mongo.Database) *RoomDependencies {
 	dbInstance := dbInstanceConn
 	roomRepository := repository.NewRoomRepository(dbInstance)
 	roomService := services.NewRoomService(&roomRepository)

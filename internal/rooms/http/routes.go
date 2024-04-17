@@ -12,5 +12,7 @@ func Routes(r *gin.Engine, appRoomDependencies *RoomDependencies) {
 	routesRooms.PUT("/:id", appRoomDependencies.rh.UpdateRoom)
 	routesRooms.DELETE("/:id", appRoomDependencies.rh.DeleteRoom)
 
-	r.Run()
+	// add user to room
+	routesRooms.PUT("/add-user/:id", appRoomDependencies.rh.AddUserToRoom)
+	routesRooms.PUT("/remove-user/:id", appRoomDependencies.rh.RemoveUserInRoom)
 }

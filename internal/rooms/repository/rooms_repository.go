@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/tesis/internal/common/utils"
 	"github.com/tesis/internal/rooms/entity"
@@ -19,9 +20,9 @@ type roomRepository struct {
 var collection *mongo.Collection
 
 type RoomRepository interface {
-	InsertOne(roomEntity *entity.Room) error
-	FindAll() ([]entity.Room, error)
-	FindOne(id string) (*entity.Room, error)
+	InsertOne(roomEntity *entity.Room) (string, error)
+	FindAll() ([]entity.RoomRes, error)
+	FindOne(id string) (*entity.RoomRes, error)
 	UpdateOne(id string, roomEntity *entity.Room) (*entity.Room, error)
 	DeleteOne(id string) (bool, error)
 
@@ -36,23 +37,29 @@ func NewRoomRepository(dbMongoInstance *mongo.Database) RoomRepository {
 	}
 }
 
-func (rr *roomRepository) InsertOne(roomEntity *entity.Room) error {
+func (rr *roomRepository) InsertOne(roomEntity *entity.Room) (string, error) {
 	roomModel := models.Room{}
 	roomModel.MapEntityToModel(roomEntity)
 
 	if !utils.CheckRoomStatus(roomModel.Status) {
-		return fmt.Errorf("room status is no valid")
+		return "", fmt.Errorf("room status is no valid")
 	}
 
 	ctx := context.TODO()
-	_, err := collection.InsertOne(ctx, roomModel)
+	result, err := collection.InsertOne(ctx, roomModel)
 	if err != nil {
 		panic(err)
 	}
-	return nil
+
+	insertedID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return "", fmt.Errorf("el ID insertado no es un ObjectID")
+	}
+
+	return insertedID.Hex(), nil
 }
 
-func (rr *roomRepository) FindAll() ([]entity.Room, error) {
+func (rr *roomRepository) FindAll() ([]entity.RoomRes, error) {
 	var rooms []models.RoomRes
 	ctx := context.TODO()
 
@@ -67,7 +74,7 @@ func (rr *roomRepository) FindAll() ([]entity.Room, error) {
 		return nil, err
 	}
 
-	roomsEntity := []entity.Room{}
+	roomsEntity := []entity.RoomRes{}
 	for i := 0; i < len(rooms); i++ {
 		roomentity := rooms[i].MapEntityFromModel()
 		roomsEntity = append(roomsEntity, *roomentity)
@@ -76,8 +83,8 @@ func (rr *roomRepository) FindAll() ([]entity.Room, error) {
 	return roomsEntity, nil
 }
 
-func (rr *roomRepository) FindOne(id string) (*entity.Room, error) {
-	var room models.Room
+func (rr *roomRepository) FindOne(id string) (*entity.RoomRes, error) {
+	var room models.RoomRes
 
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -98,7 +105,7 @@ func (rr *roomRepository) UpdateOne(id string, roomEntity *entity.Room) (*entity
 
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return nil, err
 	}
 
@@ -120,7 +127,6 @@ func (rr *roomRepository) UpdateOne(id string, roomEntity *entity.Room) (*entity
 }
 
 func (rr *roomRepository) DeleteOne(id string) (bool, error) {
-
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return false, err
@@ -128,23 +134,68 @@ func (rr *roomRepository) DeleteOne(id string) (bool, error) {
 
 	result, err := collection.DeleteOne(context.TODO(), bson.M{"_id": objectId})
 	if err != nil {
-		fmt.Print(err)
+		log.Println("Error deleting document:", err)
+		return false, err
+	}
+	if result.DeletedCount == 0 {
 		return false, nil
 	}
 
-	fmt.Println(result)
-
-	return false, nil
+	return true, nil
 }
 
-// Users in room domain
-
 func (rr *roomRepository) AddUserToRoom(roomID, userID string) error {
+	objectID, err := primitive.ObjectIDFromHex(roomID)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	filtro := bson.D{{Key: "_id", Value: objectID}}
+
+	actualizacion := bson.D{
+		{Key: "$addToSet", Value: bson.D{
+			{Key: "users", Value: userID},
+		}},
+	}
+
+	result, err := collection.UpdateOne(context.Background(), filtro, actualizacion)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if result.ModifiedCount == 0 {
+		return fmt.Errorf("room not found or user already added")
+	}
 
 	return nil
 }
 
-func (rr *roomRepository) RemoveUserInRoom(idRoom, idUser string) error {
+func (rr *roomRepository) RemoveUserInRoom(roomID, userID string) error {
+	log.Println(roomID)
+	log.Println(userID)
+	objectID, err := primitive.ObjectIDFromHex(roomID)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	filtro := bson.D{{Key: "_id", Value: objectID}}
+
+	actualizacion := bson.D{
+		{Key: "$pull", Value: bson.D{
+			{Key: "users", Value: userID},
+		}},
+	}
+
+	result, err := collection.UpdateOne(context.Background(), filtro, actualizacion)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if result.ModifiedCount == 0 {
+		return fmt.Errorf("room not found or user already removed")
+	}
 
 	return nil
 }

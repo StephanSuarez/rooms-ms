@@ -40,6 +40,7 @@ func mongoConnection(dbEnv *DbEnv) {
 
 	dbInstance = client.Database(dbEnv.Dbname)
 }
+
 func GetDBInstance(dbEnv *DbEnv) *mongo.Database {
 	if dbInstance == nil {
 		lock.Lock()

@@ -2,6 +2,7 @@ package services
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/tesis/internal/common/utils"
 	"github.com/tesis/internal/rooms/entity"
@@ -13,12 +14,12 @@ type roomService struct {
 }
 
 type RoomService interface {
-	CreateRoom(roomEntity *entity.Room) error
-	GetRooms() ([]entity.Room, error)
-	GetRoomByID(id string) (*entity.Room, error)
+	CreateRoom(roomEntity *entity.Room) (string, error)
+	GetRooms() ([]entity.RoomRes, error)
+	GetRoomByID(id string) (*entity.RoomRes, error)
 	UpdateRoom(id string, roomEntity *entity.Room) (*entity.Room, error)
 	DeleteRoom(id string) error
-	
+
 	AddUserToRoom(idRoom, idUser string) error
 	RemoveUserInRoom(idRoom, idUser string) error
 }
@@ -29,20 +30,22 @@ func NewRoomService(roomRepository *repository.RoomRepository) RoomService {
 	}
 }
 
-func (rs *roomService) CreateRoom(roomEntity *entity.Room) error {
+func (rs *roomService) CreateRoom(roomEntity *entity.Room) (string, error) {
 
 	if !utils.CheckRoomStatus(roomEntity.Status) {
-		return fmt.Errorf("room rtatus is not valid")
+		return "", fmt.Errorf("room rtatus is not valid")
 	}
 
-	if err := rs.rr.InsertOne(roomEntity); err != nil {
-		return err
+	stringID, err := rs.rr.InsertOne(roomEntity)
+	if err != nil {
+		return "", err
 	}
+	roomEntity.ID = stringID
 
-	return nil
+	return stringID, nil
 }
 
-func (rs *roomService) GetRooms() ([]entity.Room, error) {
+func (rs *roomService) GetRooms() ([]entity.RoomRes, error) {
 	rooms, err := rs.rr.FindAll()
 	if err != nil {
 		return nil, err
@@ -51,7 +54,7 @@ func (rs *roomService) GetRooms() ([]entity.Room, error) {
 	return rooms, nil
 }
 
-func (rs *roomService) GetRoomByID(id string) (*entity.Room, error) {
+func (rs *roomService) GetRoomByID(id string) (*entity.RoomRes, error) {
 	room, err := rs.rr.FindOne(id)
 	if err != nil {
 		return nil, err
@@ -81,12 +84,25 @@ func (rs *roomService) DeleteRoom(id string) error {
 
 // Users in room domain
 
-func (rr *roomService) AddUserToRoom(idRoom, idUser string) error {
+func (rs *roomService) AddUserToRoom(roomID, userID string) error {
+	err := rs.rr.AddUserToRoom(roomID, userID)
+	if err != nil {
+		return err
+	}
+
+	msg := fmt.Sprintf(`{"userID": "%s", "roomID": "%s"}`, userID, roomID)
+	addUserToRoom(os.Stdout, msg)
 
 	return nil
 }
 
-func (rr *roomService) RemoveUserInRoom(idRoom, idUser string) error {
+func (rs *roomService) RemoveUserInRoom(roomID, userID string) error {
+	err := rs.rr.RemoveUserInRoom(roomID, userID)
+	if err != nil {
+		return err
+	}
 
+	msg := fmt.Sprintf(`{"userID": "%s", "roomID": "%s"}`, userID, roomID)
+	removeUserToRoom(os.Stdout, msg)
 	return nil
 }

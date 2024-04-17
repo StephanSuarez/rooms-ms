@@ -1,6 +1,6 @@
 package models
 
-import "github.com/tesis/internal/rooms/entity"
+import "github.com/tesis/internal/roomsSubs/entity"
 
 type RoomRes struct {
 	ID          string   `bson:"_id"`

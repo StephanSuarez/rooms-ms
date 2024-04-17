@@ -1,6 +1,6 @@
 package dtos
 
-import "github.com/tesis/internal/rooms/entity"
+import "github.com/tesis/internal/roomsSubs/entity"
 
 type RoomResDTO struct {
 	ID          string

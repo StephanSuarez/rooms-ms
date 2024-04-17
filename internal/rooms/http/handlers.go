@@ -2,8 +2,10 @@ package http
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
+	"cloud.google.com/go/pubsub"
 	"github.com/gin-gonic/gin"
 	"github.com/tesis/internal/common/utils"
 	"github.com/tesis/internal/rooms/http/dtos"
@@ -20,6 +22,11 @@ type RoomHandler interface {
 	GetRoomByID(ctx *gin.Context)
 	UpdateRoom(ctx *gin.Context)
 	DeleteRoom(ctx *gin.Context)
+
+	AddUserToRoom(ctx *gin.Context)
+	RemoveUserInRoom(ctx *gin.Context)
+
+	AddUserToRoomSub(msg *pubsub.Message)
 }
 
 func NewRoomHandler(roomService *services.RoomService) RoomHandler {
@@ -38,6 +45,14 @@ func (rh *roomHandler) CreateRoom(ctx *gin.Context) {
 		return
 	}
 
+	validateData := utils.ValidateData(roomDto)
+	if validateData != "" {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": validateData,
+		})
+		return
+	}
+
 	if !utils.CheckRoomStatus(roomDto.Status) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": "Room Status is not valid",
@@ -45,15 +60,25 @@ func (rh *roomHandler) CreateRoom(ctx *gin.Context) {
 		return
 	}
 
-	if err := rh.rs.CreateRoom(roomDto.MapEntityFromDto()); err != nil {
+	stringID, err := rh.rs.CreateRoom(roomDto.MapEntityFromDto())
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
 
+	roomDtoResponse := dtos.RoomResDTO{
+		ID:          stringID,
+		Name:        roomDto.Name,
+		Description: roomDto.Description,
+		CreatedBy:   roomDto.CreatedBy,
+		NumMaxUsers: roomDto.NumMaxUsers,
+		Status:      roomDto.Status,
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"body": roomDto,
+		"body": roomDtoResponse,
 	})
 }
 
@@ -96,13 +121,24 @@ func (rh *roomHandler) UpdateRoom(ctx *gin.Context) {
 	roomDto := dtos.RoomReqDTO{}
 	if err := ctx.ShouldBind(&roomDto); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	if !utils.CheckRoomStatus(roomDto.Status) {
+	validateData := utils.ValidateData(roomDto)
+	if validateData != "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": "Room Status is not valid",
+			"error": validateData,
 		})
 		return
+	}
+
+	if roomDto.Status != "" {
+		if !utils.CheckRoomStatus(roomDto.Status) {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "Room Status is not valid",
+			})
+			return
+		}
 	}
 
 	roomEntity, err := rh.rs.UpdateRoom(id, roomDto.MapEntityFromDto())
@@ -118,11 +154,6 @@ func (rh *roomHandler) DeleteRoom(ctx *gin.Context) {
 	id := ctx.Param("id")
 	err := rh.rs.DeleteRoom(id)
 
-	if err.Error() == "room ID was not found" {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
-
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -133,24 +164,42 @@ func (rh *roomHandler) DeleteRoom(ctx *gin.Context) {
 
 // Users in room domain
 
-func (rr *roomHandler) AddUserToRoom(ctx *gin.Context) {
+func (rh *roomHandler) AddUserToRoom(ctx *gin.Context) {
 	roomID := ctx.Param("id")
-
-	var userIdReq struct {
-		UserId string `json: "userID"`
-	}
+	userIdReq := dtos.UserIdReq{}
 
 	if err := ctx.ShouldBind(&userIdReq); err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	err := rr.rs.AddUserToRoom(roomID, userIdReq.UserId)
+	err := rh.rs.AddUserToRoom(roomID, userIdReq.UserId)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
+	ctx.JSON(http.StatusOK, gin.H{"message": "user added to room"})
 }
 
-func (rr *roomHandler) RemoveUserInRoom(ctx *gin.Context) {
+func (rh *roomHandler) RemoveUserInRoom(ctx *gin.Context) {
+	roomID := ctx.Param("id")
+	userIdReq := dtos.UserIdReq{}
 
+	if err := ctx.ShouldBind(&userIdReq); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	err := rh.rs.RemoveUserInRoom(roomID, userIdReq.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "user removed to room"})
+}
+
+func (rh *roomHandler) AddUserToRoomSub(msg *pubsub.Message) {
+	log.Println(msg)
 }
